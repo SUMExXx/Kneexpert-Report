@@ -1,19 +1,39 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:kneexpertreport/firebase_options.dart';
+import 'package:kneexpertreport/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+String? globalUserDetails;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await [
-    Permission.locationWhenInUse,
-    Permission.locationAlways,
-    Permission.camera,
-    Permission.phone,
-    Permission.storage,
-    Permission.bluetoothScan,
-    Permission.bluetoothConnect,
-  ].request();
+
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform
+  );
+
+  FirebaseMessaging.onBackgroundMessage(NotificationService.backgroundHandler);
+
+  await NotificationService.initialize();
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  globalUserDetails = prefs.getString('user_details');
+
+  // print("Loaded globalUserDetails: $globalUserDetails");
+
+  await Permission.locationWhenInUse.request();
+  await Permission.locationAlways.request();
+  await Permission.camera.request();
+  await Permission.phone.request();
+  await Permission.storage.request();
+  await Permission.bluetoothScan.request();
+  await Permission.bluetoothConnect.request();
+
   runApp(const MyApp());
 }
 
@@ -71,6 +91,10 @@ class _WebViewPageState extends State<WebViewPage> {
               cacheEnabled: false,
               clearCache: true,
               useShouldOverrideUrlLoading: true,
+              supportZoom: false, // Disable zoom controls
+              builtInZoomControls: false, // Disable built-in zoom controls (Android specific)
+              displayZoomControls: false, // Hide zoom controls (Android specific)
+              // userScalable: false, // Prevent user scaling (iOS specific)
             ),
             onGeolocationPermissionsShowPrompt: (controller, origin) async {
               return GeolocationPermissionShowPromptResponse(
@@ -81,6 +105,31 @@ class _WebViewPageState extends State<WebViewPage> {
             },
             onWebViewCreated: (controller) {
               webViewController = controller;
+              NotificationService.webViewController = controller; // ✅ set globally
+            },
+            onLoadStop: (controller, url) async {
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+
+              if (url != null) {
+                // ✅ If path is /login, clear user_details
+                if (url.path == "/login") {
+                  await prefs.remove('user_details');
+                  globalUserDetails = null;
+                  // print("Cleared user_details from SharedPreferences");
+                }
+
+                // ✅ If path is / and globalUserDetails is null, fetch and save
+                if (url.path == "/" && globalUserDetails == null) {
+                  var userDetails = await controller.evaluateJavascript(
+                    source: "localStorage.getItem('user_details');",
+                  );
+                  if (userDetails != null) {
+                    await prefs.setString('user_details', userDetails);
+                    globalUserDetails = userDetails;
+                    // print("Fetched and saved user_details: $globalUserDetails");
+                  }
+                }
+              }
             },
             shouldOverrideUrlLoading: (controller, navigationAction) async {
               final uri = navigationAction.request.url;
@@ -93,7 +142,7 @@ class _WebViewPageState extends State<WebViewPage> {
                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                     return NavigationActionPolicy.CANCEL;
                   } else {
-                    print("Cannot launch $uri");
+                    // print("Cannot launch $uri");
                   }
                 }
 
