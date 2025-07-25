@@ -7,8 +7,8 @@ import 'package:kneexpertreport/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-String? globalUserDetails;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,9 +22,6 @@ void main() async {
   await NotificationService.initialize();
 
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  globalUserDetails = prefs.getString('user_details');
-
-  // print("Loaded globalUserDetails: $globalUserDetails");
 
   await Permission.locationWhenInUse.request();
   await Permission.locationAlways.request();
@@ -57,6 +54,76 @@ class WebViewPage extends StatefulWidget {
 
 class _WebViewPageState extends State<WebViewPage> {
   InAppWebViewController? webViewController;
+  static bool isUpdatingToken = false;
+  static bool hasUpdatedToken = false;
+
+  Future<void> updateToken(url, controller) async {
+    if (hasUpdatedToken || isUpdatingToken) return;
+    isUpdatingToken = true;
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    if (url != null) {
+      if (url.path == "/") {
+        var userDetails = await controller.evaluateJavascript(
+          source: "localStorage.getItem('user_details');",
+        );
+        if (userDetails != null) {
+
+          await prefs.setString('user_details', userDetails);
+
+          String? token = prefs.getString('fcm_token');
+          if(token != null){
+            final url = Uri.parse('https://develop-lead.hipxpert.in/api/method/update_user_fcm_token_hip_api');
+            final url2 = Uri.parse('https://develop-lead.kneexpert.in/api/method/update_user_fcm_token_knee_api');
+
+            final headers = {
+              'Content-Type': 'application/json',
+              'Cookie': 'full_name=Guest; sid=Guest; system_user=no; user_id=Guest; user_lang=en',
+            };
+
+            String? userdata = prefs.getString('user_details');
+            List<dynamic> decoded = jsonDecode(userdata!);
+            Map<String, dynamic> userDetails = decoded[0];
+            String? email = userDetails['email'];
+
+            final body = jsonEncode({
+              "user": email,
+              "fcm_token": token
+            });
+
+            try {
+              final response = await http.post(url, headers: headers, body: body);
+
+              if (response.statusCode == 200) {
+                print('Success: ${response.body}');
+              } else {
+                print('Error ${response.statusCode}: ${response.body}');
+              }
+            } catch (e) {
+              print('Exception: $e');
+            }
+
+            try {
+              final response = await http.post(url2, headers: headers, body: body);
+
+              if (response.statusCode == 200) {
+                print('Success: ${response.body}');
+              } else {
+                print('Error ${response.statusCode}: ${response.body}');
+              }
+            } catch (e) {
+              print('Exception: $e');
+            }
+            hasUpdatedToken = true;
+          }
+        }
+        else {
+          await prefs.remove('user_details');
+        }
+      }
+    }
+    isUpdatingToken = false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,29 +174,11 @@ class _WebViewPageState extends State<WebViewPage> {
               webViewController = controller;
               NotificationService.webViewController = controller; // ✅ set globally
             },
-            onLoadStop: (controller, url) async {
-              SharedPreferences prefs = await SharedPreferences.getInstance();
-
-              if (url != null) {
-                // ✅ If path is /login, clear user_details
-                if (url.path == "/login") {
-                  await prefs.remove('user_details');
-                  globalUserDetails = null;
-                  // print("Cleared user_details from SharedPreferences");
-                }
-
-                // ✅ If path is / and globalUserDetails is null, fetch and save
-                if (url.path == "/" && globalUserDetails == null) {
-                  var userDetails = await controller.evaluateJavascript(
-                    source: "localStorage.getItem('user_details');",
-                  );
-                  if (userDetails != null) {
-                    await prefs.setString('user_details', userDetails);
-                    globalUserDetails = userDetails;
-                    // print("Fetched and saved user_details: $globalUserDetails");
-                  }
-                }
-              }
+            // onLoadStop: (controller, url) async {
+            //   await updateToken(url, controller);
+            // },
+            onUpdateVisitedHistory: (controller, url, androidIsReload) async {
+              await updateToken(url, controller);
             },
             shouldOverrideUrlLoading: (controller, navigationAction) async {
               final uri = navigationAction.request.url;
