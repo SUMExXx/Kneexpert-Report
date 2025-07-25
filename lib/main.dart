@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -53,9 +56,34 @@ class WebViewPage extends StatefulWidget {
 }
 
 class _WebViewPageState extends State<WebViewPage> {
+
+  late final StreamSubscription<ConnectivityResult> connectivitySubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    connectivitySubscription = Connectivity().onConnectivityChanged.listen((result) {
+      setState(() {
+        // This will rebuild UI when connectivity changes
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    connectivitySubscription.cancel();
+    super.dispose();
+  }
+
   InAppWebViewController? webViewController;
   static bool isUpdatingToken = false;
   static bool hasUpdatedToken = false;
+
+  Future<bool> isConnected() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    return connectivityResult != ConnectivityResult.none;
+  }
 
   Future<void> updateToken(url, controller) async {
     if (hasUpdatedToken || isUpdatingToken) return;
@@ -125,8 +153,7 @@ class _WebViewPageState extends State<WebViewPage> {
     isUpdatingToken = false;
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildWebView() {
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) async {
@@ -147,67 +174,106 @@ class _WebViewPageState extends State<WebViewPage> {
       },
       child: Scaffold(
         body: SafeArea(
-          child: InAppWebView(
-            initialUrlRequest: URLRequest(
-              url: WebUri("https://report.kneexpert.in"),
-            ),
-            initialSettings: InAppWebViewSettings(
-              javaScriptEnabled: true,
-              geolocationEnabled: true,
-              mediaPlaybackRequiresUserGesture: false,
-              cacheEnabled: false,
-              clearCache: true,
-              useShouldOverrideUrlLoading: true,
-              supportZoom: false, // Disable zoom controls
-              builtInZoomControls: false, // Disable built-in zoom controls (Android specific)
-              displayZoomControls: false, // Hide zoom controls (Android specific)
-              // userScalable: false, // Prevent user scaling (iOS specific)
-            ),
-            onGeolocationPermissionsShowPrompt: (controller, origin) async {
-              return GeolocationPermissionShowPromptResponse(
-                origin: origin,
-                allow: true,
-                retain: true,
-              );
-            },
-            onWebViewCreated: (controller) {
-              webViewController = controller;
-              NotificationService.webViewController = controller; // ✅ set globally
-            },
-            // onLoadStop: (controller, url) async {
-            //   await updateToken(url, controller);
-            // },
-            onUpdateVisitedHistory: (controller, url, androidIsReload) async {
-              await updateToken(url, controller);
-            },
-            shouldOverrideUrlLoading: (controller, navigationAction) async {
-              final uri = navigationAction.request.url;
+            child: InAppWebView(
+              initialUrlRequest: URLRequest(
+                url: WebUri("https://report.kneexpert.in"),
+              ),
+              initialSettings: InAppWebViewSettings(
+                javaScriptEnabled: true,
+                geolocationEnabled: true,
+                mediaPlaybackRequiresUserGesture: false,
+                cacheEnabled: false,
+                clearCache: true,
+                useShouldOverrideUrlLoading: true,
+                supportZoom: false, // Disable zoom controls
+                builtInZoomControls: false, // Disable built-in zoom controls (Android specific)
+                displayZoomControls: false, // Hide zoom controls (Android specific)
+                // userScalable: false, // Prevent user scaling (iOS specific)
+              ),
+              onGeolocationPermissionsShowPrompt: (controller, origin) async {
+                return GeolocationPermissionShowPromptResponse(
+                  origin: origin,
+                  allow: true,
+                  retain: true,
+                );
+              },
+              onWebViewCreated: (controller) {
+                webViewController = controller;
+                NotificationService.webViewController = controller; // ✅ set globally
+              },
+              // onLoadStop: (controller, url) async {
+              //   await updateToken(url, controller);
+              // },
+              onUpdateVisitedHistory: (controller, url, androidIsReload) async {
+                await updateToken(url, controller);
+              },
+              shouldOverrideUrlLoading: (controller, navigationAction) async {
+                final uri = navigationAction.request.url;
 
-              if (uri != null) {
-                final scheme = uri.scheme.toLowerCase();
+                if (uri != null) {
+                  final scheme = uri.scheme.toLowerCase();
 
-                if (scheme == "tel" || scheme == "mailto") {
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    return NavigationActionPolicy.CANCEL;
-                  } else {
-                    // print("Cannot launch $uri");
+                  if (scheme == "tel" || scheme == "mailto") {
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      return NavigationActionPolicy.CANCEL;
+                    } else {
+                      // print("Cannot launch $uri");
+                    }
+                  }
+
+                  if (!uri.host.contains("kneexpert.in")) {
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      return NavigationActionPolicy.CANCEL;
+                    }
                   }
                 }
 
-                if (!uri.host.contains("kneexpert.in")) {
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-                    return NavigationActionPolicy.CANCEL;
-                  }
-                }
-              }
-
-              return NavigationActionPolicy.ALLOW;
-            },
-          )
+                return NavigationActionPolicy.ALLOW;
+              },
+            )
         ),
       ),
+    );
+  }
+
+  Widget buildNoInternetScreen() {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.wifi_off, size: 80, color: Colors.grey),
+            const SizedBox(height: 20),
+            const Text('No Internet Connection',
+                style: TextStyle(fontSize: 20)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {}); // Retry by rebuilding FutureBuilder
+              },
+              child: const Text('Retry'),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<bool>(
+      future: isConnected(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasData && snapshot.data == true) {
+          return buildWebView(); // Separate method returning your PopScope + Scaffold
+        } else {
+          return buildNoInternetScreen();
+        }
+      },
     );
   }
 }
