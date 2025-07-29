@@ -187,8 +187,8 @@ class _WebViewPageState extends State<WebViewPage> {
                 ),
                 android: AndroidInAppWebViewOptions(
                   cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
-                  domStorageEnabled: false,
-                  databaseEnabled: false,
+                  domStorageEnabled: true,
+                  databaseEnabled: true,
                   builtInZoomControls: false,
                   displayZoomControls: false,
                   supportMultipleWindows: false,
@@ -219,7 +219,7 @@ class _WebViewPageState extends State<WebViewPage> {
               },
               onWebViewCreated: (controller) async {
                 webViewController = controller;
-                await controller.clearCache();
+                // await controller.clearCache();
                 NotificationService.webViewController = controller; // ✅ set globally
               },
               // onLoadStop: (controller, url) async {
