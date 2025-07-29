@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "160927937376",
-    "project_id": "kneexpert-report",
-    "storage_bucket": "kneexpert-report.firebasestorage.app"
+    "project_number": "684691448025",
+    "project_id": "kneexpert-sales-app",
+    "storage_bucket": "kneexpert-sales-app.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:160927937376:android:1c6fc0973d2bfa49d22405",
+        "mobilesdk_app_id": "1:684691448025:android:679417ce46b94b1aa51ec8",
         "android_client_info": {
           "package_name": "com.kneexpert.kneexpertreport"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAS6wCq-f5hfGRYnDu3uqnzzfZFxg8GO2U"
+          "current_key": "AIzaSyDmU-FvyyeaZ1UHtggib8RYGtteLaT_G4w"
         }
       ],
       "services": {

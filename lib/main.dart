@@ -101,8 +101,8 @@ class _WebViewPageState extends State<WebViewPage> {
 
           String? token = prefs.getString('fcm_token');
           if(token != null){
-            final url = Uri.parse('https://develop-lead.hipxpert.in/api/method/update_user_fcm_token_hip_api');
-            final url2 = Uri.parse('https://develop-lead.kneexpert.in/api/method/update_user_fcm_token_knee_api');
+            final url = Uri.parse('https://lead.hipxpert.in/api/method/update_user_fcm_token_hip_api');
+            final url2 = Uri.parse('https://lead.kneexpert.in/api/method/update_user_fcm_token_knee_api');
 
             final headers = {
               'Content-Type': 'application/json',
@@ -178,6 +178,26 @@ class _WebViewPageState extends State<WebViewPage> {
               initialUrlRequest: URLRequest(
                 url: WebUri("https://report.kneexpert.in"),
               ),
+              initialOptions: InAppWebViewGroupOptions(
+                crossPlatform: InAppWebViewOptions(
+                  cacheEnabled: false,
+                  javaScriptEnabled: true,
+                  mediaPlaybackRequiresUserGesture: false,
+                  useShouldOverrideUrlLoading: true,
+                ),
+                android: AndroidInAppWebViewOptions(
+                  cacheMode: AndroidCacheMode.LOAD_NO_CACHE,
+                  domStorageEnabled: false,
+                  databaseEnabled: false,
+                  builtInZoomControls: false,
+                  displayZoomControls: false,
+                  supportMultipleWindows: false,
+                ),
+                ios: IOSInAppWebViewOptions(
+                  sharedCookiesEnabled: false,
+                  allowsInlineMediaPlayback: true,
+                ),
+              ),
               initialSettings: InAppWebViewSettings(
                 javaScriptEnabled: true,
                 geolocationEnabled: true,
@@ -197,8 +217,9 @@ class _WebViewPageState extends State<WebViewPage> {
                   retain: true,
                 );
               },
-              onWebViewCreated: (controller) {
+              onWebViewCreated: (controller) async {
                 webViewController = controller;
+                await controller.clearCache();
                 NotificationService.webViewController = controller; // ✅ set globally
               },
               // onLoadStop: (controller, url) async {

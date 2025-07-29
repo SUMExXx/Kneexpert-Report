@@ -41,48 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDa2weYvfjDNQJBuDaA-Uapm7OV7gs_Atk',
-    appId: '1:160927937376:web:fc5e70daa35f7b2fd22405',
-    messagingSenderId: '160927937376',
-    projectId: 'kneexpert-report',
-    authDomain: 'kneexpert-report.firebaseapp.com',
-    storageBucket: 'kneexpert-report.firebasestorage.app',
-    measurementId: 'G-1XX08C9EG5',
+    apiKey: 'AIzaSyAAYuomUyxlKO5GVD1LaUEoY3LaoNH3Xxs',
+    appId: '1:684691448025:web:e044624c3c77f24da51ec8',
+    messagingSenderId: '684691448025',
+    projectId: 'kneexpert-sales-app',
+    authDomain: 'kneexpert-sales-app.firebaseapp.com',
+    storageBucket: 'kneexpert-sales-app.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAS6wCq-f5hfGRYnDu3uqnzzfZFxg8GO2U',
-    appId: '1:160927937376:android:1c6fc0973d2bfa49d22405',
-    messagingSenderId: '160927937376',
-    projectId: 'kneexpert-report',
-    storageBucket: 'kneexpert-report.firebasestorage.app',
+    apiKey: 'AIzaSyDmU-FvyyeaZ1UHtggib8RYGtteLaT_G4w',
+    appId: '1:684691448025:android:679417ce46b94b1aa51ec8',
+    messagingSenderId: '684691448025',
+    projectId: 'kneexpert-sales-app',
+    storageBucket: 'kneexpert-sales-app.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBd2rAlurL6fIIbcU2DLCsvRLvopnP2sjs',
-    appId: '1:160927937376:ios:4c0da460e638928dd22405',
-    messagingSenderId: '160927937376',
-    projectId: 'kneexpert-report',
-    storageBucket: 'kneexpert-report.firebasestorage.app',
+    apiKey: 'AIzaSyCttEIenOVjCCLqjA9o1GupeQJPtnN87to',
+    appId: '1:684691448025:ios:140ae6125f787372a51ec8',
+    messagingSenderId: '684691448025',
+    projectId: 'kneexpert-sales-app',
+    storageBucket: 'kneexpert-sales-app.firebasestorage.app',
     iosBundleId: 'com.kneexpert.kneexpertreport',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyBd2rAlurL6fIIbcU2DLCsvRLvopnP2sjs',
-    appId: '1:160927937376:ios:4c0da460e638928dd22405',
-    messagingSenderId: '160927937376',
-    projectId: 'kneexpert-report',
-    storageBucket: 'kneexpert-report.firebasestorage.app',
+    apiKey: 'AIzaSyCttEIenOVjCCLqjA9o1GupeQJPtnN87to',
+    appId: '1:684691448025:ios:140ae6125f787372a51ec8',
+    messagingSenderId: '684691448025',
+    projectId: 'kneexpert-sales-app',
+    storageBucket: 'kneexpert-sales-app.firebasestorage.app',
     iosBundleId: 'com.kneexpert.kneexpertreport',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDa2weYvfjDNQJBuDaA-Uapm7OV7gs_Atk',
-    appId: '1:160927937376:web:c7f98baa3f50aef4d22405',
-    messagingSenderId: '160927937376',
-    projectId: 'kneexpert-report',
-    authDomain: 'kneexpert-report.firebaseapp.com',
-    storageBucket: 'kneexpert-report.firebasestorage.app',
-    measurementId: 'G-DG3YKDZF7H',
+    apiKey: 'AIzaSyAAYuomUyxlKO5GVD1LaUEoY3LaoNH3Xxs',
+    appId: '1:684691448025:web:aa0a3ad7e4830a3da51ec8',
+    messagingSenderId: '684691448025',
+    projectId: 'kneexpert-sales-app',
+    authDomain: 'kneexpert-sales-app.firebaseapp.com',
+    storageBucket: 'kneexpert-sales-app.firebasestorage.app',
   );
+
 }
